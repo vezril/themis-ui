@@ -1,0 +1,50 @@
+# Single-node cluster: a second replica buys nothing.
+replicaCount: 1
+
+image:
+  # Docker Hub account is `calvinference`, NOT the GitHub org.
+  repository: calvinference/themisui
+  # Empty means the chart's appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+themis:
+  # themis-service REST base — SERVER-SIDE only (the BFF). The browser never sees it and never
+  # calls it; it talks to this app's /api/themis. NEXT_PUBLIC_* is baked into the image at build
+  # time, so there is deliberately no value for it here.
+  # Assumed in-cluster address; confirm against where themis-service is actually deployed.
+  serviceUrl: http://themis-service.themis.svc.cluster.local:8080
+  # themis-service's gateway guard (auth.mode=gateway-secret) refuses /api/v1 requests without
+  # X-Themis-Gateway-Secret, and a pod-to-pod call bypasses the ingress that injects it, so the
+  # BFF sends it itself (ADR-0015). Leave secretName empty while the service runs with mode: none:
+  # then no env var is set and no header is sent.
+  gatewaySecret:
+    secretName: ""
+    secretKey: secret
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  # Off by default: this screen shows client PII and financial records and sits behind Authelia.
+  enabled: false
+  # DELIBERATELY EMPTY and load-bearing: an empty ingressClassName is RFC-1123-invalid and k8s
+  # rejects the object; the template omits the field when this is empty. The cluster has no
+  # IngressClass resource and k3s's Traefik silently ignores named classes.
+  className: ""
+  host: ""
+  path: /
+  annotations: {}
+  # No cert-manager on the cluster: both stay empty or the template would reference a Secret
+  # nothing issues.
+  clusterIssuer: ""
+  tlsSecretName: ""
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 256Mi

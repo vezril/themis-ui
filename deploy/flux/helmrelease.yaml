@@ -1,0 +1,37 @@
+# Reference only, mirroring the codex apps/<name>/ HelmRelease shape. The codex session owns the
+# real one (and the image pin: it records what is DEPLOYED, not what is newest).
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: themis-ui
+  namespace: themis-ui
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: deploy/charts/themis-ui      # path within the themis-ui repo
+      sourceRef:
+        kind: GitRepository
+        name: themis-ui
+        namespace: flux-system
+  values:
+    image:
+      repository: calvinference/themisui  # Docker Hub account, NOT the GitHub org
+      tag: "0.1.0"
+    replicaCount: 1                       # single-node cluster
+    themis:
+      # themis-service REST base — server-side (BFF) only; the browser talks to /api/themis.
+      serviceUrl: http://themis-service.themis.svc.cluster.local:8080
+      # While themis-service runs with auth.mode=gateway-secret, point this at a Secret holding
+      # the shared secret (the same value the ingress injects) so the BFF can present it.
+      gatewaySecret:
+        secretName: ""        # e.g. themis-ui-gateway
+        secretKey: secret
+    ingress:
+      enabled: false          # opt in deliberately: this shows client PII; Authelia fronts it
+      host: ""                # e.g. themis.tailscale (reach via Traefik NodePort :61642, never :80)
+      # DELIBERATELY EMPTY, and load-bearing: no IngressClass exists on this cluster and an empty
+      # ingressClassName is invalid. The template omits the field when empty.
+      className: ""
+      clusterIssuer: ""       # no cert-manager on the cluster
+      tlsSecretName: ""

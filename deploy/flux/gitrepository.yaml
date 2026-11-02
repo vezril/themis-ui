@@ -1,0 +1,13 @@
+# Reference only. The codex session owns deploys (apps/themis-ui/ in codex); there is no Flux on
+# the cluster today, and real deploys are `helm upgrade -f <mirrored-values>` from the TAGGED chart
+# — never bare `--set`. themis-ui is PUBLIC, so no git-auth secretRef is needed.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: themis-ui
+  namespace: flux-system
+spec:
+  interval: 5m
+  url: https://github.com/vezril/themis-ui
+  ref:
+    branch: main
