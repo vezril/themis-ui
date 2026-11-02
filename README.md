@@ -69,3 +69,13 @@ Two service behaviours the UI must respect rather than paper over:
 ## License
 
 MIT — see [LICENSE.md](LICENSE.md).
+
+## Development
+
+Node 22 (`.nvmrc`). `npm ci`, then `npm run dev` (it sets `NEXT_PUBLIC_THEMIS_API_BASE=/api/themis`).
+Set `THEMIS_SERVICE_URL` (and `THEMIS_GATEWAY_SECRET` if the service runs `auth.mode=gateway-secret`)
+to point the BFF at a running themis-service; see `.env.example`.
+
+`npm run build` **requires** `NEXT_PUBLIC_THEMIS_API_BASE=/api/themis` (it is inlined into the
+browser bundle at build time; there is no fallback), and `npm run verify:bundle` proves it landed.
+The Dockerfile and CI both do this. Checks: `npm run lint`, `npm run typecheck`, `npm test`.
